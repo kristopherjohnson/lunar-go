@@ -19,3 +19,6 @@ go.work
 
 # Build artifacts
 lunar
+
+# Claude Code directory
+.claude/
