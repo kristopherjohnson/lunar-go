@@ -83,7 +83,9 @@ startTurn: // 02.10 in original FOCAL code
 
 promptForK:
 	fmt.Print("K=:")
-	if !acceptDouble(&K) || K < 0 || ((0 < K) && (K < 8)) || K > 200 {
+	var err error
+	K, err = acceptDouble()
+	if err != nil || K < 0 || ((0 < K) && (K < 8)) || K > 200 {
 		fmt.Print("NOT POSSIBLE")
 		for x := 1; x <= 51; x++ {
 			fmt.Print(".")
@@ -198,16 +200,14 @@ func applyThrust() {
 }
 
 // Read a floating-point value from stdin.
-// Returns true on success, or false if input did not contain a number.
+// Returns the parsed float64 value and nil error on success,
+// or returns 0 and an error if input did not contain a valid number.
 // Exits on EOF or other failure to read input.
-func acceptDouble(value *float64) bool {
+func acceptDouble() (float64, error) {
 	line := acceptLine()
 
-	if f, err := strconv.ParseFloat(strings.TrimSpace(line), 64); err == nil {
-		*value = f
-		return true
-	}
-	return false
+	f, err := strconv.ParseFloat(strings.TrimSpace(line), 64)
+	return f, err
 }
 
 // Reads input and returns true if it starts with 'Y' or 'y', or returns false if it
