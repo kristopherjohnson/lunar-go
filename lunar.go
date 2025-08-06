@@ -37,7 +37,7 @@ var (
 func main() {
 	// Initialize the persistent input reader
 	inputReader = bufio.NewReader(os.Stdin)
-	
+
 	if len(os.Args) > 1 {
 		// If --echo is present, then write all input back to standard output.
 		// (This is useful for testing with files as redirected input.)
@@ -49,7 +49,7 @@ func main() {
 	fmt.Println("CONTROL CALLING LUNAR MODULE. MANUAL CONTROL IS NECESSARY")
 	fmt.Println("YOU MAY RESET FUEL RATE K EACH 10 SECS TO 0 OR ANY VALUE")
 	fmt.Println("BETWEEN 8 & 200 LBS/SEC. YOU'VE 16000 LBS FUEL. ESTIMATED")
-	fmt.Println("FREE FALL IMPACT TIME-120 SECS. CAPSULE WEIGHT-32500 LBS\n\n")
+	fmt.Print("FREE FALL IMPACT TIME-120 SECS. CAPSULE WEIGHT-32500 LBS\n\n\n")
 
 	for {
 		playGame()
@@ -60,12 +60,12 @@ func main() {
 		}
 	}
 
-	fmt.Println("CONTROL OUT\n\n")
+	fmt.Print("CONTROL OUT\n\n\n")
 }
 
 func playGame() {
 	// 01.20 in original FOCAL code
-	fmt.Println("FIRST RADAR CHECK COMING UP\n\n")
+	fmt.Print("FIRST RADAR CHECK COMING UP\n\n\n")
 	fmt.Println("COMMENCE LANDING PROCEDURE")
 	fmt.Println("TIME,SECS   ALTITUDE,MILES+FEET   VELOCITY,MPH   FUEL,LBS   FUEL RATE")
 

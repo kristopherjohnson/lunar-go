@@ -1,6 +1,9 @@
 # "make" or "make lunar" - build lunar executable
 # "make run"             - build lunar executable and run it
 # "make test"            - build and run unit tests
+# "make format"          - format Go source code with go fmt
+# "make lint"            - run go vet for static analysis
+# "make check"           - run both format and lint
 # "make clean"           - delete executable and test output files
 
 DIFF:=diff
@@ -12,7 +15,7 @@ run: lunar
 	./lunar
 .PHONY: run
 
-test: test_success test_failure test_good
+test: check test_success test_failure test_good
 .PHONY: test
 
 test_good: lunar
@@ -29,6 +32,17 @@ test_failure: lunar
 	./lunar --echo <test/failure_input.txt 1>failure_output.txt 2>/dev/null || true
 	$(DIFF) test/failure_output_expected.txt failure_output.txt
 .PHONY: test_failure
+
+format:
+	go fmt lunar.go
+.PHONY: format
+
+lint:
+	go vet lunar.go
+.PHONY: lint
+
+check: format lint
+.PHONY: check
 
 clean:
 	- $(RM) lunar
