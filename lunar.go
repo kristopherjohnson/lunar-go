@@ -190,10 +190,10 @@ func updateLanderState() {
 // Subroutine at line 09.10 in original FOCAL code
 func applyThrust() {
 	Q := S * K / M
-	Q2 := math.Pow(Q, 2)
-	Q3 := math.Pow(Q, 3)
-	Q4 := math.Pow(Q, 4)
-	Q5 := math.Pow(Q, 5)
+	Q2 := Q * Q
+	Q3 := Q2 * Q
+	Q4 := Q3 * Q
+	Q5 := Q4 * Q
 
 	J = V + G*S + Z*(-Q-Q2/2-Q3/3-Q4/4-Q5/5)
 	I = A - G*S*S/2 - V*S + Z*S*(Q/2+Q2/6+Q3/12+Q4/20+Q5/30)
