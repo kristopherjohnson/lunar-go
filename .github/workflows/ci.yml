@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+        
+    - name: Verify Go version
+      run: go version
+      
+    - name: Build
+      run: make lunar
+      
+    - name: Run format check
+      run: |
+        make format
+        if [ -n "$(git diff --name-only)" ]; then
+          echo "Code is not formatted. Please run 'make format'"
+          git diff
+          exit 1
+        fi
+        
+    - name: Run lint
+      run: make lint
+      
+    - name: Run tests
+      run: make test
+      
+    - name: Upload test artifacts
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-outputs
+        path: |
+          success_output.txt
+          failure_output.txt
+          good_output.txt
