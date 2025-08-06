@@ -31,9 +31,13 @@ import (
 var (
 	A, G, I, J, K, L, M, N, S, T, V, W, Z float64
 	echoInput                             bool
+	inputReader                           *bufio.Reader
 )
 
 func main() {
+	// Initialize the persistent input reader
+	inputReader = bufio.NewReader(os.Stdin)
+	
 	if len(os.Args) > 1 {
 		// If --echo is present, then write all input back to standard output.
 		// (This is useful for testing with files as redirected input.)
@@ -95,6 +99,7 @@ promptForK:
 
 	T = 10
 
+turnLoop:
 	for { // 03.10 in original FOCAL code
 		if M-N < .001 {
 			goto fuelOut
@@ -132,10 +137,10 @@ promptForK:
 				}
 				updateLanderState()
 				if -J < 0 {
-					goto startTurn
+					goto turnLoop
 				}
 				if V <= 0 {
-					goto startTurn
+					goto turnLoop
 				}
 			}
 		}
@@ -208,37 +213,41 @@ func acceptFloat() (float64, error) {
 	return strconv.ParseFloat(strings.TrimSpace(line), 64)
 }
 
-// Reads input and returns true if it starts with 'Y' or 'y', or returns false if it
-// starts with 'N' or 'n'.
-// If input starts with none of those characters, prompt again.
+// Reads input and returns true if it starts with 'Y' or 'y', false otherwise.
+// This matches the behavior of the original C/BASIC version which treats
+// any non-Y input as "no" rather than reprompting.
 // If unable to read input, exits.
 func acceptYesOrNo() bool {
-	for {
-		fmt.Print("(ANS. YES OR NO):")
-		line := acceptLine()
+	fmt.Print("(ANS. YES OR NO):")
+	line := acceptLine()
 
-		line = strings.TrimSpace(line)
-		if len(line) > 0 {
-			switch line[0] {
-			case 'y', 'Y':
-				return true
-			case 'n', 'N':
-				return false
-			}
+	line = strings.TrimSpace(line)
+	if len(line) > 0 {
+		switch line[0] {
+		case 'y', 'Y':
+			return true
 		}
 	}
+	return false
 }
 
 // Reads a line of input.
 // If unable to read input, exits the program instead of returning.
 func acceptLine() string {
-	scanner := bufio.NewScanner(os.Stdin)
-	if !scanner.Scan() {
+	line, err := inputReader.ReadString('\n')
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "\nEND OF INPUT")
 		os.Exit(1)
 	}
 
-	line := scanner.Text()
+	// Remove the trailing newline character
+	if len(line) > 0 && line[len(line)-1] == '\n' {
+		line = line[:len(line)-1]
+	}
+	// Also remove carriage return on Windows
+	if len(line) > 0 && line[len(line)-1] == '\r' {
+		line = line[:len(line)-1]
+	}
 
 	if echoInput {
 		fmt.Println(line)

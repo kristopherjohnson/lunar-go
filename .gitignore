@@ -20,5 +20,10 @@ go.work
 # Build artifacts
 lunar
 
+# Test output files
+success_output.txt
+failure_output.txt
+good_output.txt
+
 # Claude Code directory
 .claude/
