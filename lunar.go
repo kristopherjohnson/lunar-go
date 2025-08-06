@@ -84,7 +84,7 @@ startTurn: // 02.10 in original FOCAL code
 promptForK:
 	fmt.Print("K=:")
 	var err error
-	K, err = acceptDouble()
+	K, err = acceptFloat()
 	if err != nil || K < 0 || ((0 < K) && (K < 8)) || K > 200 {
 		fmt.Print("NOT POSSIBLE")
 		for x := 1; x <= 51; x++ {
@@ -203,11 +203,9 @@ func applyThrust() {
 // Returns the parsed float64 value and nil error on success,
 // or returns 0 and an error if input did not contain a valid number.
 // Exits on EOF or other failure to read input.
-func acceptDouble() (float64, error) {
+func acceptFloat() (float64, error) {
 	line := acceptLine()
-
-	f, err := strconv.ParseFloat(strings.TrimSpace(line), 64)
-	return f, err
+	return strconv.ParseFloat(strings.TrimSpace(line), 64)
 }
 
 // Reads input and returns true if it starts with 'Y' or 'y', or returns false if it
@@ -232,7 +230,7 @@ func acceptYesOrNo() bool {
 }
 
 // Reads a line of input.
-// If unable to read input, exits.
+// If unable to read input, exits the program instead of returning.
 func acceptLine() string {
 	scanner := bufio.NewScanner(os.Stdin)
 	if !scanner.Scan() {
@@ -240,11 +238,11 @@ func acceptLine() string {
 		os.Exit(1)
 	}
 
-	line := scanner.Text() + "\n"
+	line := scanner.Text()
 
 	if echoInput {
-		fmt.Print(line)
+		fmt.Println(line)
 	}
 
-	return strings.TrimSuffix(line, "\n")
+	return line
 }
