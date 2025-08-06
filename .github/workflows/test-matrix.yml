@@ -28,10 +28,36 @@ jobs:
       run: go version
       
     - name: Build
-      run: make lunar
+      run: go build -o lunar${{ runner.os == 'Windows' && '.exe' || '' }} lunar.go
       
-    - name: Run tests
-      run: make test
+    - name: Format check
+      run: |
+        go fmt lunar.go
+        git diff --exit-code
+      
+    - name: Lint
+      run: go vet lunar.go
+      
+    - name: Test (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        ./lunar --echo <test/good_input.txt >good_output.txt 2>/dev/null || true
+        diff test/good_output_expected.txt good_output.txt
+        ./lunar --echo <test/success_input.txt >success_output.txt 2>/dev/null || true
+        diff test/success_output_expected.txt success_output.txt
+        ./lunar --echo <test/failure_input.txt >failure_output.txt 2>/dev/null || true
+        diff test/failure_output_expected.txt failure_output.txt
+        
+    - name: Test (Windows)
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        lunar.exe --echo <test\good_input.txt >good_output.txt 2>nul || exit /b 0
+        fc /N test\good_output_expected.txt good_output.txt
+        lunar.exe --echo <test\success_input.txt >success_output.txt 2>nul || exit /b 0
+        fc /N test\success_output_expected.txt success_output.txt  
+        lunar.exe --echo <test\failure_input.txt >failure_output.txt 2>nul || exit /b 0
+        fc /N test\failure_output_expected.txt failure_output.txt
       
     - name: Upload test artifacts on failure
       if: failure()
