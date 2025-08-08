@@ -13,23 +13,23 @@ import (
 	"strings"
 )
 
-// Global variables
+// Global variables from original FOCAL code
 //
-// A - Altitude (miles)
-// G - Gravity
-// I - Intermediate altitude (miles)
-// J - Intermediate velocity (miles/sec)
-// K - Fuel rate (lbs/sec)
-// L - Elapsed time (sec)
-// M - Total weight (lbs)
-// N - Empty weight (lbs, Note: M - N is remaining fuel weight)
-// S - Time elapsed in current 10-second turn (sec)
-// T - Time remaining in current 10-second turn (sec)
-// V - Downward speed (miles/sec)
-// W - Temporary working variable
-// Z - Thrust per pound of fuel burned
+// a - Altitude (miles)
+// g - Gravity
+// i - Intermediate altitude (miles)
+// j - Intermediate velocity (miles/sec)
+// k - Fuel rate (lbs/sec)
+// l - Elapsed time (sec)
+// m - Total weight (lbs)
+// n - Empty weight (lbs, Note: m - n is remaining fuel weight)
+// s - Time elapsed in current 10-second turn (sec)
+// t - Time remaining in current 10-second turn (sec)
+// v - Downward speed (miles/sec)
+// w - Temporary working variable
+// z - Thrust per pound of fuel burned
 var (
-	A, G, I, J, K, L, M, N, S, T, V, W, Z float64
+	a, g, i, j, k, l, m, n, s, t, v, w, z float64
 	echoInput                             bool
 	inputReader                           *bufio.Reader
 )
@@ -69,27 +69,27 @@ func playGame() {
 	fmt.Println("COMMENCE LANDING PROCEDURE")
 	fmt.Println("TIME,SECS   ALTITUDE,MILES+FEET   VELOCITY,MPH   FUEL,LBS   FUEL RATE")
 
-	A = 120
-	V = 1
-	M = 32500
-	N = 16500
-	G = .001
-	Z = 1.8
-	L = 0
+	a = 120
+	v = 1
+	m = 32500
+	n = 16500
+	g = .001
+	z = 1.8
+	l = 0
 
 startTurn: // 02.10 in original FOCAL code
 	fmt.Printf("%7.0f%16.0f%7.0f%15.2f%12.1f      ",
-		L,
-		math.Trunc(A),
-		5280*(A-math.Trunc(A)),
-		3600*V,
-		M-N)
+		l,
+		math.Trunc(a),
+		5280*(a-math.Trunc(a)),
+		3600*v,
+		m-n)
 
 promptForK:
 	fmt.Print("K=:")
 	var err error
-	K, err = acceptFloat()
-	if err != nil || K < 0 || ((0 < K) && (K < 8)) || K > 200 {
+	k, err = acceptFloat()
+	if err != nil || k < 0 || ((0 < k) && (k < 8)) || k > 200 {
 		fmt.Print("NOT POSSIBLE")
 		for x := 1; x <= 51; x++ {
 			fmt.Print(".")
@@ -97,49 +97,49 @@ promptForK:
 		goto promptForK
 	}
 
-	T = 10
+	t = 10
 
 turnLoop:
 	for { // 03.10 in original FOCAL code
-		if M-N < .001 {
+		if m-n < .001 {
 			goto fuelOut
 		}
 
-		if T < .001 {
+		if t < .001 {
 			goto startTurn
 		}
 
-		S = T
+		s = t
 
-		if N+S*K-M > 0 {
-			S = (M - N) / K
+		if n+s*k-m > 0 {
+			s = (m - n) / k
 		}
 
 		applyThrust()
 
-		if I <= 0 {
+		if i <= 0 {
 			goto loopUntilOnTheMoon
 		}
 
-		if (V > 0) && (J < 0) {
+		if (v > 0) && (j < 0) {
 			for { // 08.10 in original FOCAL code
 				// FOCAL-to-Go gotcha: In FOCAL, multiplication has a higher
 				// precedence than division. In Go, they have the same
 				// precedence and are evaluated left-to-right. So the
-				// original FOCAL subexpression `M * G / Z * K` can't be
-				// copied as-is into Go: `Z * K` has to be parenthesized to
+				// original FOCAL subexpression `m * g / z * k` can't be
+				// copied as-is into Go: `z * k` has to be parenthesized to
 				// get the same result.
-				W = (1 - M*G/(Z*K)) / 2
-				S = M*V/(Z*K*(W+math.Sqrt(W*W+V/Z))) + 0.05
+				w = (1 - m*g/(z*k)) / 2
+				s = m*v/(z*k*(w+math.Sqrt(w*w+v/z))) + 0.05
 				applyThrust()
-				if I <= 0 {
+				if i <= 0 {
 					goto loopUntilOnTheMoon
 				}
 				updateLanderState()
-				if -J < 0 {
+				if -j < 0 {
 					goto turnLoop
 				}
-				if V <= 0 {
+				if v <= 0 {
 					goto turnLoop
 				}
 			}
@@ -149,59 +149,59 @@ turnLoop:
 	}
 
 loopUntilOnTheMoon: // 07.10 in original FOCAL code
-	for S >= .005 {
-		S = 2 * A / (V + math.Sqrt(V*V+2*A*(G-Z*K/M)))
+	for s >= .005 {
+		s = 2 * a / (v + math.Sqrt(v*v+2*a*(g-z*k/m)))
 		applyThrust()
 		updateLanderState()
 	}
 	goto onTheMoon
 
 fuelOut: // 04.10 in original FOCAL code
-	fmt.Printf("FUEL OUT AT %8.2f SECS\n", L)
-	S = (math.Sqrt(V*V+2*A*G) - V) / G
-	V += G * S
-	L += S
+	fmt.Printf("FUEL OUT AT %8.2f SECS\n", l)
+	s = (math.Sqrt(v*v+2*a*g) - v) / g
+	v += g * s
+	l += s
 
 onTheMoon: // 05.10 in original FOCAL code
-	fmt.Printf("ON THE MOON AT %8.2f SECS\n", L)
-	W = 3600 * V
-	fmt.Printf("IMPACT VELOCITY OF %8.2f M.P.H.\n", W)
-	fmt.Printf("FUEL LEFT: %8.2f LBS\n", M-N)
-	if W <= 1 {
+	fmt.Printf("ON THE MOON AT %8.2f SECS\n", l)
+	w = 3600 * v
+	fmt.Printf("IMPACT VELOCITY OF %8.2f M.P.H.\n", w)
+	fmt.Printf("FUEL LEFT: %8.2f LBS\n", m-n)
+	if w <= 1 {
 		fmt.Println("PERFECT LANDING !-(LUCKY)")
-	} else if W <= 10 {
+	} else if w <= 10 {
 		fmt.Println("GOOD LANDING-(COULD BE BETTER)")
-	} else if W <= 22 {
+	} else if w <= 22 {
 		fmt.Println("CONGRATULATIONS ON A POOR LANDING")
-	} else if W <= 40 {
+	} else if w <= 40 {
 		fmt.Println("CRAFT DAMAGE. GOOD LUCK")
-	} else if W <= 60 {
+	} else if w <= 60 {
 		fmt.Println("CRASH LANDING-YOU'VE 5 HRS OXYGEN")
 	} else {
 		fmt.Println("SORRY,BUT THERE WERE NO SURVIVORS-YOU BLEW IT!")
-		fmt.Printf("IN FACT YOU BLASTED A NEW LUNAR CRATER %8.2f FT. DEEP\n", W*.277777)
+		fmt.Printf("IN FACT YOU BLASTED A NEW LUNAR CRATER %8.2f FT. DEEP\n", w*.277777)
 	}
 }
 
 // Subroutine at line 06.10 in original FOCAL code
 func updateLanderState() {
-	L += S
-	T -= S
-	M -= S * K
-	A = I
-	V = J
+	l += s
+	t -= s
+	m -= s * k
+	a = i
+	v = j
 }
 
 // Subroutine at line 09.10 in original FOCAL code
 func applyThrust() {
-	Q := S * K / M
+	Q := s * k / m
 	Q2 := Q * Q
 	Q3 := Q2 * Q
 	Q4 := Q3 * Q
 	Q5 := Q4 * Q
 
-	J = V + G*S + Z*(-Q-Q2/2-Q3/3-Q4/4-Q5/5)
-	I = A - G*S*S/2 - V*S + Z*S*(Q/2+Q2/6+Q3/12+Q4/20+Q5/30)
+	j = v + g*s + z*(-Q-Q2/2-Q3/3-Q4/4-Q5/5)
+	i = a - g*s*s/2 - v*s + z*s*(Q/2+Q2/6+Q3/12+Q4/20+Q5/30)
 }
 
 // Read a floating-point value from stdin.
